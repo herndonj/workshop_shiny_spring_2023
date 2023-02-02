@@ -1,0 +1,82 @@
+---
+title: "NEISS Exploratory Analysis"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## NEISS 
+- [Background on the NEISS Dataset](https://flowingdata.com/2016/02/09/why-people-visit-the-emergency-room/)
+
+
+```{r Loading Required Libraries}
+library(lubridate)
+library(tidyverse)
+library(janitor)
+library(gt)
+```
+
+We are going to load three datasets of the NEISS data from 2017 that were obtained from a github repository designed for using these data for teaching.
+
+- The *injuries* dataset ...
+- The *population* dataset ..
+- the *products* dataset ...
+
+```{r Loading data for the project}
+injuries <- read_tsv("../../data/NEISS/injuries.tsv")
+population <- read_tsv("../../data/NEISS/population.tsv")
+products <- read_tsv("../../data/NEISS/products.tsv")
+```
+
+In the spirit of many mysteries, we might begin investigating these data by asking what products cause the most trips to the emergency room and where do these injuries occur? The injuries dataset provides an observation for each injury that we can use to explore the top five products and locations for ER injuries to start our data analysis.
+
+
+```{r Overall, what products in the United States cause the most injuries in 2017?}
+injuries |> count(prod_code, sort = TRUE) |> left_join(products, by = "prod_code") |> head(5)
+```
+
+
+```{r Overall, where are people most likely to be injured in 2017?}
+injuries |> count(location, wt=weight, sort = TRUE) |> head(5)
+```
+
+# I want to get a quick look at the percentages by location... could have used
+# janitor::tabyl for this... but I've got the tidyverse loaded so...
+injuries |> group_by(location) |> summarise(pct = sum(weight)/9611496*100) |> arrange(desc(pct)) |> head(5)
+
+
+
+```{r}
+basketball_injuries_demographics <- injuries |>  filter(prod_code == 1205) |> count(age, sex, wt = weight, sort = TRUE)
+basketball_injuries_demographics |>  ggplot(aes(x = age, y = n, color = sex)) +
+  geom_line() +
+  labs(title = "Estimated ER Visits Related to Basketballs in 2017", y = "Estimated Number of Injuries")
+```
+
+```{r}
+count_injured_by_basketball <- basketball_injuries_demographics |> summarise(sum(n))
+
+```
+
+
+
+
+```{r}
+
+gt_basketball_injuries <- gt(head(basketball_injuries_demographics, 5))
+gt_basketball <- 
+  gt_basketball_injuries |> 
+  tab_header(
+    title = "Estimated Top 5 groups with ER visits related to Basketball",
+    subtitle = ""
+  )
+
+gt_basketball
+```
+
+
+injuries |> ggplot(aes(x=age, y=))
+

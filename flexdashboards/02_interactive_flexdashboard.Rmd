@@ -1,0 +1,100 @@
+---
+title: "Estimated US emergency room visits (2017)"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source_code: embed
+runtime: shiny
+---
+
+```{r global, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+injuries <- read_tsv("../data/NEISS/injuries.tsv")
+```
+
+{.sidebar}
+=======================================================================
+
+**NEISS 2017 Explorer**
+
+The National Electronic Injury Surveillance System provides a representative sample of US emergency room visits associated with a consumer product. Data in this dashboard cover emergency room visits in 2017.
+
+
+```{r}
+selectInput("code", label = "Product",
+            choices = c( "floors or flooring materials" = 1807,	
+                         "stairs or steps" = 1842,
+                         "beds or bedframes, other or not specified" = 4076,
+                         "basketball (activity, apparel or equipment)" = 1205,
+                         "bicycles and accessories" = 5040),
+                          selected = 1205)
+
+```
+
+Dashboard 
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+### Number of injuries in the US (2017) {.value-box} 
+
+```{r}
+injuries_demographics <- reactive ({
+  injuries |>  filter(prod_code == input$code) |> count(age, sex, wt = weight, sort = TRUE)
+})
+
+count_injured_by_product <- reactive ({
+  injuries_demographics() |> summarise(sum(n)) 
+})
+
+renderValueBox({
+  
+  valueBox(
+    value = prettyNum(floor(count_injured_by_product()), big.mark=","), 
+    icon = "fa-users",
+    color = "blue"
+    )
+})
+
+```
+
+### Percentage of injuries with this product {.value-box}
+
+```{r}
+pct_total_injuries_in_2017 <- reactive ({
+  count_injured_by_product() / sum(injuries$weight) * 100
+})
+
+renderValueBox({
+  #pct_injuries <- formatC(pct_total_injuries_in_2017(), digits = 2, format = "f")
+  valueBox(
+    value = paste0(round(pct_total_injuries_in_2017(), digits = 2),"%"),
+    color = "primary",
+    icon = "fa-percent"
+    )
+})
+
+```
+Row {data-width=1040}
+-----------------------------------------------------------------------
+
+### Emergency room visits related to the product
+
+```{r}
+
+renderPlot({injuries_demographics() |>  ggplot(aes(x = age, y = n, color = sex)) +
+  geom_line() +
+  labs(title = "", y = "Estimated Number of Injuries") +
+  theme_grey(base_size = 16)  
+})
+```
+
+Data
+=======================================================================
+
+```{r}
+renderTable({injuries_demographics()})
+#knitr::kable(injuries_demographics[1:20,c("age", "sex", "n")])
+```
+

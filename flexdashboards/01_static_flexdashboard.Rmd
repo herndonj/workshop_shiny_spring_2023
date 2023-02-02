@@ -1,0 +1,32 @@
+---
+title: "Estimated US emergency room visit related to basketball (2017)"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+injuries <- read_tsv("../data/NEISS/injuries.tsv")
+```
+
+### Basketball related ER visits {data-width=650}
+
+```{r}
+basketball_injuries_demographics <- injuries |>  filter(prod_code == 1205) |>
+  count(age, sex, wt = weight, sort = TRUE)
+basketball_injuries_demographics |>  ggplot(aes(x = age, y = n, color = sex)) +
+  geom_line() +
+  labs(title = "Basketball related ER Visits (2017)",
+       y = "Estimated Number of Injuries")
+```
+
+### Top 20 demographic groups for basketball related ER visits (2017) {data-width=350}
+
+```{r}
+knitr::kable(basketball_injuries_demographics[1:20,c("age", "sex", "n")])
+```
+
+
