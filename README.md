@@ -1,4 +1,4 @@
-# CDVS Spring 2023 Workshop: Creating dashboards with Shiny and flexdashboards
+# Creating dashboards with Shiny and flexdashboards
 
 This repository contains slides and code for the CDVS spring 2023 workshop on dashboards.
 
